@@ -2,11 +2,9 @@ package com.example.demo.controller;
 
 import com.example.demo.config.MinIoProperties;
 import com.example.demo.entity.ResState;
-import com.example.demo.entity.UserContainer;
-import com.example.demo.service.MinIoUtil;
+import com.example.demo.service.MinIoService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.License;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +21,7 @@ public class MinIoController {
     @Autowired
     MinIoProperties minIoProperties;
     @Autowired
-    private MinIoUtil minIoUtil;
+    private MinIoService minIoUtil;
 
     @ApiOperation(value = "上传文件")
     @PostMapping(value = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

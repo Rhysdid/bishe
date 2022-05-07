@@ -4,10 +4,6 @@ import com.example.demo.config.MinIoProperties;
 import com.example.demo.entity.ResState;
 import com.example.demo.entity.UserMinio;
 import com.example.demo.repository.UserMinioRepository;
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelSftp;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PutObjectOptions;
@@ -21,16 +17,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 @Slf4j
 @Component
-public class MinIoUtil {
+public class MinIoService {
 
     @Autowired
     MinIoProperties minIoProperties;

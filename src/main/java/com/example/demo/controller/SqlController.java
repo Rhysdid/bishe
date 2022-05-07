@@ -1,21 +1,18 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.ResState;
-import com.example.demo.entity.UserBean;
-import com.example.demo.entity.UserContainer;
 import com.example.demo.entity.UserSql;
-import com.example.demo.service.SqlAllocate;
+import com.example.demo.service.SqlAllocateService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Api(tags= "sql资源接口")
 public class SqlController {
     @Autowired
-    private SqlAllocate sqlAllocate;
+    private SqlAllocateService sqlAllocate;
 
     @ApiOperation(value = "创建用户")
     @PostMapping (value = "/creatuser")
