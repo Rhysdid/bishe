@@ -24,13 +24,23 @@ public class UserMinio {
 
     private Integer userid;
 
+    private String pastname;
 
-    public Integer getUserid() {
-        return userid;
-    }
+    private Integer size;
+
+
+    public Integer getUserid() { return userid; }
 
     public void setUserid(Integer userid) {
         this.userid = userid;
+    }
+
+    public Integer getSize() {
+        return size;
+    }
+
+    public void setSize(Integer size) {
+        this.size = size;
     }
 
     public String getFilename() {
@@ -39,6 +49,14 @@ public class UserMinio {
 
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public String getPastname() {
+        return pastname;
+    }
+
+    public void setPastname(String pastname) {
+        this.pastname = pastname;
     }
 
 }

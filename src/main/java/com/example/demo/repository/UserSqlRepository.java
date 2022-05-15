@@ -16,4 +16,5 @@ import java.util.List;
 @Repository
 public interface UserSqlRepository extends CrudRepository<UserSql, Integer> {
     public List<UserSql> findByUserid(Integer userid);
+    public List<UserSql> deleteByUserid(Integer userid);
 }

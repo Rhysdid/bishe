@@ -15,4 +15,5 @@ import java.util.List;
 @Repository
 public interface UserMinioRepository extends CrudRepository<UserMinio, Integer> {
     public List<UserMinio> findByUserid(Integer userid);
+    public List<UserMinio> deleteByFilename(String filename);
 }

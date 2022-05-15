@@ -27,10 +27,21 @@ public class ContainersController {
         return containerService.getAllContainers();
     }
 
+    @GetMapping("/managecontainer")
+    @ApiOperation("管理所有容器")
+    public Iterable<UserContainer> manageAllContainers() { return containerService.manageAllContainers(); }
+
     @PostMapping ("/inspectcontainer")
     @ApiOperation("用户获取容器信息")
-    public List<InspectContainerResponse> inspectContainer(@RequestBody Integer userid) {
-        List<InspectContainerResponse> res=containerService.inspectContainer(userid);
+    public List<InspectContainerResponse> inspectContainer(@RequestBody UserContainer userContainer) {
+        List<InspectContainerResponse> res=containerService.inspectContainer(userContainer.getUserid());
+        return res;
+    }
+
+    @PostMapping ("/statscontainer")
+    @ApiOperation("用户获取容器stats")
+    public List<Statistics> statsContainer(@RequestBody UserContainer userContainer) {
+        List<Statistics> res=containerService.statsContainer(userContainer.getUserid());
         return res;
     }
 
@@ -46,7 +57,7 @@ public class ContainersController {
         return containerService.startContainer(userContainer.getContainerid(),userContainer.getUserid());
     }
 
-    @DeleteMapping ("/delectcontainer")
+    @DeleteMapping ("/deletecontainer")
     @ApiOperation("删除指定容器")
     public ResState deleteContainer(@RequestBody UserContainer userContainer) {
         return containerService.deleteContainer(userContainer.getContainerid(),userContainer.getUserid());

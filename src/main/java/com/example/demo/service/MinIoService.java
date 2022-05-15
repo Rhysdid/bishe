@@ -4,6 +4,11 @@ import com.example.demo.config.MinIoProperties;
 import com.example.demo.entity.ResState;
 import com.example.demo.entity.UserMinio;
 import com.example.demo.repository.UserMinioRepository;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PutObjectOptions;
@@ -17,10 +22,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 @Slf4j
 @Component
@@ -44,11 +52,25 @@ public class MinIoService {
      * @date : 2020/8/16 20:56
      */
 
-    public List<String> getuserfile(Integer userid){
-        List<UserMinio> list=userMinioRepository.findByUserid(userid);
-        List<String> res=new ArrayList<>();
-        for (UserMinio userMinio:list){
-            res.add(userMinio.getFilename());
+    public Iterable<UserMinio> getallfile(String status){
+        if(status.equals("1")){
+            Iterable<UserMinio> res=userMinioRepository.findAll();
+            return res;
+        }else{
+            return null;
+        }
+    }
+
+    public List<UserMinio> getuserfile(Integer userid){
+        List<UserMinio> res=userMinioRepository.findByUserid(userid);
+        return res;
+    }
+
+    public Integer getRestmem(Integer userid){
+        List<UserMinio> lists=userMinioRepository.findByUserid(userid);
+        int res=204800;
+        for (UserMinio list:lists){
+            res-= list.getSize();
         }
         return res;
     }
@@ -135,11 +157,7 @@ public class MinIoService {
      * @return: java.lang.String : 文件url地址
      * @date : 2020/8/16 23:40
      */
-    @SneakyThrows(Exception.class)
-    public String upload(String bucketName, String fileName, InputStream stream) {
-        minioClient.putObject(bucketName, fileName, stream, new PutObjectOptions(stream.available(), -1));
-        return getFileUrl(bucketName, fileName);
-    }
+
 
     /**
      * 文件上传
@@ -159,6 +177,16 @@ public class MinIoService {
             res.setState(false);
             return res;
         }
+        List<UserMinio> lists=userMinioRepository.findByUserid(userid);
+        int sum=0;
+        for(UserMinio list:lists){
+            sum+=list.getSize();
+        }
+        if(sum>409600){
+            res.setMsg("您已到达存储上限200M，请删除部分文件后重新上传");
+            res.setState(false);
+            return res;
+        }
         //文件名
         String originalFilename = file.getOriginalFilename();
         System.out.println(originalFilename);
@@ -172,6 +200,8 @@ public class MinIoService {
         UserMinio userMinio=new UserMinio();
         userMinio.setUserid(userid);
         userMinio.setFilename(fileName);
+        userMinio.setPastname(originalFilename);
+        userMinio.setSize((int)file.getSize()/1024);
         userMinioRepository.save(userMinio);
         res.setMsg("上传成功");
         res.setState(true);
@@ -188,9 +218,27 @@ public class MinIoService {
      * @return: void
      * @date : 2020/8/16 20:53
      */
+    @Transactional
     @SneakyThrows(Exception.class)
-    public void deleteFile(String bucketName, String fileName) {
+    public ResState deleteFile(String bucketName, String fileName,Integer userid) {
+        List<UserMinio> lists= userMinioRepository.findByUserid(userid);
+        ResState res=new ResState();
+        boolean exist=false;
+        for(UserMinio list:lists){
+            if(list.getFilename().equals(fileName)){
+                exist=true;
+            }
+        }
+        if(!exist){
+            res.setMsg("您没有这个文件，请检查输入");
+            res.setState(false);
+            return res;
+        }
         minioClient.removeObject(bucketName, fileName);
+        userMinioRepository.deleteByFilename(fileName);
+        res.setMsg("删除成功");
+        res.setState(true);
+        return res;
     }
 
     /**
@@ -227,8 +275,22 @@ public class MinIoService {
      * @date : 2020/8/16 22:07
      */
     @SneakyThrows(Exception.class)
-    public String getFileUrl(String bucketName, String fileName) {
-        return minioClient.presignedGetObject(bucketName, fileName);
+    public ResState getFileUrl(String bucketName, String fileName,Integer userid) {
+        List<UserMinio> list=userMinioRepository.findByUserid(userid);
+        boolean ifexist=false;
+        for(UserMinio userMinio:list){
+            if(userMinio.getFilename().equals(fileName))ifexist=true;
+        }
+        ResState res=new ResState();
+        if(ifexist){
+            res.setMsg(minioClient.presignedGetObject(bucketName, fileName));
+            res.setState(true);
+            return res;
+        }else{
+            res.setMsg("获取失败，请检查你的输入是否正确");
+            res.setState(false);
+            return res;
+        }
     }
 
 }

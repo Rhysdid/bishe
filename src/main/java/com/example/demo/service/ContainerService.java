@@ -12,6 +12,7 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
+import com.github.dockerjava.netty.InvocationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -42,7 +43,31 @@ public class ContainerService {
             .withMaxTotalConnections(100)
             .withMaxPerRouteConnections(10);
 
+    DockerClientConfig config1 = DefaultDockerClientConfig.createDefaultConfigBuilder().withDockerTlsVerify(true)
+            .withDockerCertPath("/usr/jar/zhengshu1").withDockerHost("tcp://124.221.246.68:2375")
+            .withDockerConfig("/usr/jar/zhengshu1").withApiVersion("1.41").withRegistryUrl("https://index.docker.io/v1/")
+            .withRegistryUsername("wjq").withRegistryPassword("Dbnzja+513")
+            .withRegistryEmail("xx").build();
+    DockerCmdExecFactory dockerCmdExecFactory1 =  new JerseyDockerCmdExecFactory()
+            .withReadTimeout(100000)
+            .withConnectTimeout(100000)
+            .withMaxTotalConnections(100)
+            .withMaxPerRouteConnections(10);
+    DockerClientConfig config2 = DefaultDockerClientConfig.createDefaultConfigBuilder().withDockerTlsVerify(true)
+            .withDockerCertPath("/usr/jar/zhengshu2").withDockerHost("tcp://124.221.246.68:2375")
+            .withDockerConfig("/usr/jar/zhengshu2").withApiVersion("1.41").withRegistryUrl("https://index.docker.io/v1/")
+            .withRegistryUsername("wjq").withRegistryPassword("Dbnzja+513")
+            .withRegistryEmail("xx").build();
+    DockerCmdExecFactory dockerCmdExecFactory2 =  new JerseyDockerCmdExecFactory()
+            .withReadTimeout(100000)
+            .withConnectTimeout(100000)
+            .withMaxTotalConnections(100)
+            .withMaxPerRouteConnections(10);
+
     private DockerClient dockerClient = DockerClientBuilder.getInstance(config).withDockerCmdExecFactory(dockerCmdExecFactory).build();
+    private DockerClient dockerClient1 = DockerClientBuilder.getInstance(config1).withDockerCmdExecFactory(dockerCmdExecFactory1).build();
+    private DockerClient dockerClient2 = DockerClientBuilder.getInstance(config2).withDockerCmdExecFactory(dockerCmdExecFactory2).build();
+
     @Autowired
     private UserContainerService userContainerService;
     //private UserContainerService userContainerService = BeanUtils.getBean(UserContainerService.class);
@@ -52,6 +77,11 @@ public class ContainerService {
         return containers;
     }
 
+    public Iterable<UserContainer> manageAllContainers(){
+        Iterable<UserContainer> res=userContainerService.findlist();
+        return res;
+    }
+
     public List<InspectContainerResponse> inspectContainer(Integer userid){
         List<String> list = userContainerService.findByUserid(userid);
         List<InspectContainerResponse> res=new ArrayList<>();
@@ -59,6 +89,25 @@ public class ContainerService {
             res.add(dockerClient.inspectContainerCmd(s).exec());
         }
         return res;
+    }
+
+    public List<Statistics> statsContainer(Integer userid){
+        InvocationBuilder.AsyncResultCallback<Statistics> callback = new InvocationBuilder.AsyncResultCallback<>();
+        List<String> list = userContainerService.findByUserid(userid);
+        List<Statistics> res=new ArrayList<>();
+        for(String s:list){
+            dockerClient.statsCmd(s).exec(callback);
+            Statistics stats = callback.awaitResult();
+            res.add(stats);
+//            try {
+//                Statistics stats = callback.awaitResult();
+//                callback.close();
+//                res.add(stats);
+//            } catch (RuntimeException | IOException e) {
+//                // you may want to throw an exception here
+//            }
+        }
+        return res; // this may be null or invalid if the container has terminated
     }
 
     public ResState stopContainer(String containerID,Integer userid){
@@ -177,6 +226,16 @@ public class ContainerService {
     public ResState creatContainer(ContainerInfo containerInfo) {
         //ExposedPort tcp22 = ExposedPort.tcp(22);
         ResState res=new ResState();
+        List<UserContainer> userlists=userContainerService.finduserlist(containerInfo.getUserid());
+        int cur=0;
+        for(UserContainer userlist:userlists){
+            cur+=userlist.getMem();
+        }
+        if(cur+containerInfo.getMemory()>400){
+            res.setMsg("您所有容器申请的内存资源已达400M，请删除部分容器后申请");
+            res.setState(false);
+            return res;
+        }
         String tim= String.valueOf(System.currentTimeMillis());
         try{
             String[] cmds = {"/bin/sh","-c","mkdir "+containerInfo.getUserid()+"_"+tim+" && wget -O /usr/jar/"
@@ -201,13 +260,13 @@ public class ContainerService {
         portBindings.bind(tcppublic, Ports.Binding.bindPort(containerInfo.getPublicPort()));
         CreateContainerResponse containerResponse = dockerClient.createContainerCmd(containerInfo.getImgName())
                 .withName(containerInfo.getContainerName())
-                //.withImage(containerInfo.getImgName())s
+                //.withImage(containerInfo.getImgName())
                 .withExposedPorts(tcppublic)
                 .withPortBindings(portBindings)
                 .withBinds(Bind.parse("/root/fin/"+containerInfo.getUserid()+"_"+tim+":/usr/jar"))
-                .withCmd("bash", "-c", "java -jar /usr/jar/"+containerInfo.getFilename())
-                //.withBinds(Bind.parse("/root/minio:/usr/jar"))
-                //.withCmd("bash", "-c", "java -jar /usr/jar/demo-0.0.1-SNAPSHOT.jar")
+                .withCmd("bash", "-c", "cd /usr/jar && "+containerInfo.getCmd())
+                .withMemory(containerInfo.getMemory()*1024*1024)
+                .withCpuShares(containerInfo.getCpuShares())
                 .exec();
         System.out.println(containerResponse.toString());
         dockerClient.startContainerCmd(containerResponse.getId()).exec();
@@ -222,13 +281,15 @@ public class ContainerService {
             userContainer.setContainerid(containerResponse.getId().substring(0,12));
             userContainer.setUserid(containerInfo.getUserid());
             userContainer.setImagename(containerInfo.getImgName());
+            userContainer.setCpu(containerInfo.getCpuShares());
+            userContainer.setMem(containerInfo.getMemory());
             System.out.println(userContainer.getContainerid()+" "+userContainer.getUserid()+" "+userContainer.getImagename()+" "+userContainer.getId());
             userContainerService.save(userContainer);
             res.setMsg("创建容器成功");
             res.setState(true);
             return res;
         }else{
-            res.setMsg("创建容器失败，请检查端口，镜像等信息是否有误");
+            res.setMsg("创建容器失败，请检查端口，镜像，命令等信息是否有误");
             res.setState(false);
             return res;
         }
@@ -246,29 +307,3 @@ public class ContainerService {
 
 }
 
-//    public CreateContainerResponse createContainers(DockerClient client,String containerName,String imageName){//映射端口8088—>80
-//
-//        ExposedPort tcp80 = ExposedPort.tcp(80);
-//
-//        Ports portBindings= newPorts();
-//
-//        portBindings.bind(tcp80, Ports.Binding.bindPort(8088));
-//
-//        CreateContainerResponse container=client.createContainerCmd(imageName)
-//
-//                .withName(containerName)
-//
-//                .withHostConfig(newHostConfig().withPortBindings(portBindings))
-//
-//                .withExposedPorts(tcp80).exec();returncontainer;
-//
-//        PortBinding portBinding = PortBinding.parse(containerInfo.getPublicPort() + ":" + containerInfo.getPrivatePort());
-//        HostConfig hostConfig = HostConfig.newHostConfig()
-//                .withPortBindings(portBinding);
-//        CreateContainerResponse response = dockerClient.createContainerCmd(containerInfo.getImage())
-//                .withName(containerInfo.getName())
-//                .withHostConfig(hostConfig)
-//                .withExposedPorts(ExposedPort.parse(containerInfo.getPrivatePort() + "/tcp"))
-//                .exec();
-//
-//    }

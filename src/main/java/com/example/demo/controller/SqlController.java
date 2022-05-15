@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.ResState;
+import com.example.demo.entity.User;
 import com.example.demo.entity.UserSql;
 import com.example.demo.service.SqlAllocateService;
 import io.swagger.annotations.Api;
@@ -14,24 +15,25 @@ public class SqlController {
     @Autowired
     private SqlAllocateService sqlAllocate;
 
-    @ApiOperation(value = "创建用户")
-    @PostMapping (value = "/creatuser")
+    @ApiOperation(value = "获取mysql服务")
+    @PostMapping (value = "/creatmysql")
     public ResState creatuser(@RequestBody UserSql userSql){
-        ResState res = sqlAllocate.creatuser(userSql);
+        ResState res = sqlAllocate.creatmysql(userSql);
         return res;
     }
 
-    @ApiOperation(value = "授权用户")
-    @PostMapping (value = "/chmoduser")
-    public ResState chmoduser(@RequestBody UserSql userSql){
-        ResState res = sqlAllocate.giveChomd(userSql);
+    @ApiOperation(value = "展示所有mysql服务")
+    @PostMapping (value = "/showmysql")
+    public Iterable<UserSql> showmysql(@RequestBody User user){
+        Iterable<UserSql> res = sqlAllocate.showmysql(user);
         return res;
     }
 
-    @ApiOperation(value = "授权用户")
-    @PostMapping (value = "/dropuser")
-    public ResState dropuser(@RequestBody UserSql userSql){
-        ResState res = sqlAllocate.dropusr(userSql);
+    @ApiOperation(value = "删除指定mysql服务")
+    @DeleteMapping (value = "/showmysql")
+    public ResState deletemysql(@RequestBody UserSql userSql){
+        ResState res = sqlAllocate.deletemysql(userSql);
         return res;
     }
+
 }

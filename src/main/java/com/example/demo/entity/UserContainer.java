@@ -26,6 +26,8 @@ public class UserContainer {
     private Integer userid;
     private String containerid;
     private String imagename;
+    private Integer cpu;
+    private Long mem;
 
     public List<UserContainer> toList(Optional<UserContainer> option) {
         return option.
@@ -47,6 +49,22 @@ public class UserContainer {
 
     public void setUserid(Integer userid) {
         this.userid = userid;
+    }
+
+    public Integer getCpu() {
+        return cpu;
+    }
+
+    public void setCpu(Integer cpu) {
+        this.cpu = cpu;
+    }
+
+    public Long getMem() {
+        return mem;
+    }
+
+    public void setMem(Long mem) {
+        this.mem = mem;
     }
 
     public String getContainerid() {

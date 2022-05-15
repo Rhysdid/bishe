@@ -26,7 +26,7 @@ public class UserService {
             res.setState(false);
             return res;
         }else{
-            res.setMsg("登录成功");
+            res.setMsg(get.getStatus());
             res.setState(true);
             return res;
         }

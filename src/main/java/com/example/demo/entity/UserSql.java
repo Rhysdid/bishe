@@ -1,8 +1,10 @@
 package com.example.demo.entity;
 
+import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -13,12 +15,44 @@ import javax.persistence.Id;
  * @Desc MySQLJavaBean
  */
 @Entity
-@Data //包含了get，set和toString
-@AllArgsConstructor //有参构造器 set
-@NoArgsConstructor  //无参构造器 get
+@ApiModel
+@Component
 public class UserSql {
     @Id
     private Integer userid;
-    private String sqlname;
     private String sqlpassword;
+    private Integer publicport;
+    private String containerid;
+
+
+    public Integer getUserid() { return userid; }
+
+    public void setUserid(Integer userid) {
+        this.userid = userid;
+    }
+
+    public String getSqlpassword() {
+        return sqlpassword;
+    }
+
+    public void setSqlpassword(String sqlpassword) {
+        this.sqlpassword = sqlpassword;
+    }
+
+    public Integer getPublicport() {
+        return publicport;
+    }
+
+    public void setPublicport(Integer publicport) {
+        this.publicport = publicport;
+    }
+
+    public String getContainerid() {
+        return containerid;
+    }
+
+    public void setContainerid(String containerid) {
+        this.containerid = containerid;
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.ResState;
+import com.example.demo.entity.UserContainer;
 import com.example.demo.service.ImageService;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
@@ -31,13 +32,13 @@ public class ImagesController {
 
     @PostMapping("/pullimage")
     @ApiOperation("下载镜像")
-    public ResState pullImage(@RequestBody String imageName) {
-        return imageService.pullImage(imageName);
+    public ResState pullImage(@RequestBody UserContainer userContainer) {
+        return imageService.pullImage(userContainer.getImagename());
     }
 
     @DeleteMapping("/removeimage")
     @ApiOperation("删除镜像")
-    public ResState removeImage(@RequestBody String imageName) {
-        return imageService.removeImage(imageName);
+    public ResState removeImage(@RequestBody UserContainer userContainer) {
+        return imageService.removeImage(userContainer.getImagename());
     }
 }

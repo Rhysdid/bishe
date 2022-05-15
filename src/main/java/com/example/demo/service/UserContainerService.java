@@ -25,6 +25,15 @@ public class UserContainerService{
         }
         return res;
     }
+    public List<UserContainer> finduserlist (Integer userid){
+        List<UserContainer> res=userContainerRepository.findByUserid(userid);
+        return res;
+    }
+
+    public Iterable<UserContainer> findlist (){
+        Iterable<UserContainer> res=userContainerRepository.findAll();
+        return res;
+    }
 
     public void save(UserContainer userContainer){
         userContainerRepository.save(userContainer);
@@ -33,7 +42,9 @@ public class UserContainerService{
     @Transactional
     public void delete(String containerid){
         List<UserContainer> tmp=userContainerRepository.deleteByContainerid(containerid);
+
     }
+
 
 
 

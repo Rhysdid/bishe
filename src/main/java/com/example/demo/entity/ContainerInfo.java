@@ -17,6 +17,7 @@ public class ContainerInfo {
     private int publicPort;
     private int privatePort;
     private String filename;
+    private String cmd;
 
     public String getImgName() {
         return imgName;
@@ -30,9 +31,13 @@ public class ContainerInfo {
         return filename;
     }
 
-    public void setFilename(String filename) {
-        this.filename = filename;
+    public void setFilename(String filename) { this.filename = filename; }
+
+    public String getCmd() {
+        return cmd;
     }
+
+    public void setCmd(String cmd) { this.cmd = cmd; }
 
     public String getContainerName() {
         return containerName;
